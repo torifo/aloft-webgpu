@@ -1,0 +1,8 @@
+# OS / tooling
+.DS_Store
+.superpowers/
+node_modules/
+
+# NOTE: assets/*.png are committed on purpose — real-DEM heightmaps (~120KB each),
+# so the site is self-contained and works offline without re-fetching tiles.
+# Regenerate them with: node tools/fetch_dem.mjs
