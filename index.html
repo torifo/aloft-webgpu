@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>aloft — glide tour</title>
+  <style>
+    :root { color-scheme: dark; }
+    html, body { margin: 0; height: 100%; background: #05080f; overflow: hidden;
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; color: #e7eefc; }
+    #gpu { display: block; width: 100vw; height: 100vh; }
+    #fallback {
+      display: none; position: fixed; inset: 0;
+      align-items: center; justify-content: center;
+      padding: 2rem; box-sizing: border-box; font-size: 16px; line-height: 1.5;
+      color: #e7eefc; background: #05080f; white-space: pre-wrap; text-align: center;
+    }
+    #hud {
+      position: fixed; left: 14px; bottom: 14px;
+      font-size: 12px; line-height: 1.5; color: #cdd9f0;
+      background: rgba(8,12,20,.6); padding: 8px 12px; border-radius: 8px;
+      pointer-events: none; backdrop-filter: blur(6px); max-width: 60vw;
+    }
+    #hud kbd { background: #1b2334; border: 1px solid #2c3a55; border-radius: 4px;
+      padding: 0 4px; font-size: 11px; }
+    #tod-wrap {
+      position: fixed; right: 14px; bottom: 14px;
+      background: rgba(8,12,20,.6); padding: 8px 12px; border-radius: 8px;
+      backdrop-filter: blur(6px); font-size: 11px; color: #cdd9f0;
+      display: flex; align-items: center; gap: 8px;
+    }
+    #tod { width: 160px; accent-color: #ffb27f; }
+
+    /* Destinations menu */
+    #menu {
+      position: fixed; inset: 0; z-index: 10; overflow: auto;
+      background:
+        radial-gradient(1200px 600px at 50% -10%, rgba(120,150,255,.10), transparent 60%),
+        radial-gradient(900px 500px at 80% 110%, rgba(255,150,90,.08), transparent 60%),
+        #05080f;
+      transition: opacity .35s ease;
+    }
+    #menu.hidden { opacity: 0; pointer-events: none; }
+    .menu-inner { max-width: 1080px; margin: 0 auto; padding: 7vh 24px 6vh; }
+    .menu-head h1 { font-size: clamp(40px, 8vw, 84px); margin: 0; letter-spacing: .04em;
+      background: linear-gradient(120deg, #cfe0ff, #ffd9b0); -webkit-background-clip: text;
+      background-clip: text; color: transparent; }
+    .menu-sub { color: #8ea2c8; margin: 6px 0 36px; font-size: 14px; }
+    .menu-sub kbd { background: #1b2334; border: 1px solid #2c3a55; border-radius: 4px; padding: 0 5px; }
+    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
+    .card {
+      position: relative; text-align: left; cursor: pointer; overflow: hidden;
+      background: rgba(14,20,33,.72); border: 1px solid rgba(120,150,210,.16);
+      border-radius: 16px; padding: 22px; color: inherit; font: inherit;
+      display: flex; flex-direction: column; gap: 6px; min-height: 160px;
+      transition: transform .2s ease, border-color .2s ease, box-shadow .25s ease;
+    }
+    .card:hover, .card:focus-visible {
+      transform: translateY(-4px); outline: none;
+      border-color: var(--accent);
+      box-shadow: 0 12px 40px -12px var(--accent), 0 0 0 1px var(--accent) inset;
+    }
+    .card-glow { position: absolute; inset: -40% -40% auto auto; width: 70%; height: 70%;
+      background: radial-gradient(circle, var(--accent), transparent 70%); opacity: .18;
+      filter: blur(20px); pointer-events: none; }
+    .card-id { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); }
+    .card-name { font-size: 22px; font-weight: 700; color: #f0f5ff; }
+    .card-country { font-size: 12px; color: #7e92ba; }
+    .card-tag { font-size: 12.5px; color: #aab9d8; line-height: 1.5; margin-top: auto; }
+    .menu-foot { color: #6f83aa; font-size: 12px; min-height: 16px; margin-top: 28px; }
+  </style>
+</head>
+<body>
+  <canvas id="gpu"></canvas>
+  <div id="fallback"></div>
+  <div id="hud">aloft — initializing…</div>
+  <div id="tod-wrap">
+    <span>time of day</span>
+    <input id="tod" type="range" min="0" max="100" value="27" aria-label="time of day" />
+  </div>
+  <script type="module" src="./src/main.js"></script>
+</body>
+</html>
