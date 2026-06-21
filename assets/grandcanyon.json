@@ -1,0 +1,17 @@
+{
+  "id": "grandcanyon",
+  "name": "Grand Canyon",
+  "source": "aws-terrarium",
+  "size": 512,
+  "z": 11,
+  "elevMin": 673,
+  "elevMax": 2766,
+  "waterLevel": 0.1205410952514227,
+  "metersPerSample": 92.6,
+  "center": {
+    "lat": 36.11,
+    "lon": -112.11
+  },
+  "accent": "#ffb27f",
+  "tagline": "Layered chasm carved by the Colorado River."
+}

@@ -1,0 +1,17 @@
+{
+  "id": "guilin",
+  "name": "Guilin Karst",
+  "source": "aws-terrarium",
+  "size": 512,
+  "z": 11,
+  "elevMin": 104,
+  "elevMax": 1268,
+  "waterLevel": 0.040378006872852236,
+  "metersPerSample": 103.7,
+  "center": {
+    "lat": 25.27,
+    "lon": 110.29
+  },
+  "accent": "#9af0c8",
+  "tagline": "A forest of limestone towers along the Li River."
+}

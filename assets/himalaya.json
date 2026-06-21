@@ -1,0 +1,17 @@
+{
+  "id": "himalaya",
+  "name": "Everest / Himalaya",
+  "source": "aws-terrarium",
+  "size": 512,
+  "z": 11,
+  "elevMin": 2193,
+  "elevMax": 8732,
+  "waterLevel": 0,
+  "metersPerSample": 101.2,
+  "center": {
+    "lat": 27.99,
+    "lon": 86.93
+  },
+  "accent": "#dbe6ff",
+  "tagline": "The roof of the world — extreme vertical scale."
+}

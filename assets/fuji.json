@@ -1,0 +1,17 @@
+{
+  "id": "fuji",
+  "name": "Mount Fuji",
+  "source": "aws-terrarium",
+  "size": 512,
+  "z": 11,
+  "elevMin": 15,
+  "elevMax": 3732,
+  "waterLevel": 0.04439063761097659,
+  "metersPerSample": 93.5,
+  "center": {
+    "lat": 35.36,
+    "lon": 138.73
+  },
+  "accent": "#7fd1ff",
+  "tagline": "Lone snow-capped cone above the cloud sea."
+}

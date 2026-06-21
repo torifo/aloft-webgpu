@@ -1,0 +1,17 @@
+{
+  "id": "fjord",
+  "name": "Geirangerfjord",
+  "source": "aws-terrarium",
+  "size": 512,
+  "z": 11,
+  "elevMin": -2,
+  "elevMax": 1841,
+  "waterLevel": 0.34600962751153624,
+  "metersPerSample": 35.8,
+  "center": {
+    "lat": 62.1,
+    "lon": 7.21
+  },
+  "accent": "#7fe0ff",
+  "tagline": "Sheer cliff walls plunging into a glassy fjord."
+}
