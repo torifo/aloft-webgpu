@@ -217,6 +217,33 @@ async function start() {
   let mode = "menu";      // "menu" | "glide"
   let freeMode = false;
   let tod = 0.27;         // golden-hour default (sunrise side)
+
+  // Toggleable visual layers — a small registry so new layers can be added
+  // easily (each wires to a pass/uniform in the render loop below). Fully
+  // client-side, so it stays GitHub Pages-friendly (no server, no build).
+  const LAYERS = [
+    { key: "clouds", label: "雲海 Clouds" },
+    { key: "water",  label: "水面 Water" },
+    { key: "haze",   label: "大気 Haze" },
+    { key: "snow",   label: "雪冠 Snow" },
+  ];
+  const layers = Object.fromEntries(LAYERS.map((l) => [l.key, true]));
+  const layersPanel = (() => {
+    const el = document.createElement("div");
+    el.id = "layers";
+    el.className = "hidden";
+    el.innerHTML = `<div class="layers-head">layers</div>`;
+    for (const l of LAYERS) {
+      const lab = document.createElement("label");
+      const cb = document.createElement("input");
+      cb.type = "checkbox"; cb.checked = true;
+      cb.addEventListener("change", () => { layers[l.key] = cb.checked; });
+      lab.append(cb, document.createTextNode(l.label));
+      el.appendChild(lab);
+    }
+    document.body.appendChild(el);
+    return el;
+  })();
   const keys = new Set();
   let railU = 0;
   let freeState = null;
@@ -290,6 +317,7 @@ async function start() {
     speed01 = 0;
     writeHash(id);
     menu.hide();
+    layersPanel.classList.remove("hidden");
     canvas.style.display = "block";
     updateHud();
   }
@@ -299,6 +327,7 @@ async function start() {
     scene = null;
     writeHash(null);
     menu.show();
+    layersPanel.classList.add("hidden");
     menu.setStatus("");
   }
 
@@ -424,7 +453,7 @@ async function start() {
     const inv = invert(vp);
     const sun = sunDirFromTOD(tod);
     const tint = sunTint(tod);
-    const fog = scene ? scene.fogFar : 3000;
+    const fog = scene ? (layers.haze ? scene.fogFar : 1e7) : 3000;
     const cloudY = scene ? scene.mesh.minH + (scene.mesh.maxH - scene.mesh.minH) * 0.18 : 30;
 
     // sky UBO
@@ -446,7 +475,7 @@ async function start() {
       fTerrain.set(vp, 0);
       fTerrain[16] = sun[0]; fTerrain[17] = sun[1]; fTerrain[18] = sun[2]; fTerrain[19] = tod;
       fTerrain[20] = eye[0]; fTerrain[21] = eye[1]; fTerrain[22] = eye[2];
-      fTerrain[24] = scene.mesh.minH; fTerrain[25] = scene.mesh.maxH; fTerrain[26] = scene.snowStart; fTerrain[27] = fog;
+      fTerrain[24] = scene.mesh.minH; fTerrain[25] = scene.mesh.maxH; fTerrain[26] = layers.snow ? scene.snowStart : 2.0; fTerrain[27] = fog;
       fTerrain[28] = tint[0]; fTerrain[29] = tint[1]; fTerrain[30] = tint[2];
       device.queue.writeBuffer(terrainUBO, 0, fTerrain);
 
@@ -481,16 +510,20 @@ async function start() {
       scenePass.setIndexBuffer(scene.ibuf, "uint32");
       scenePass.drawIndexed(scene.indexCount);
       // water
-      scenePass.setPipeline(waterP);
-      scenePass.setBindGroup(0, waterBG);
-      scenePass.setVertexBuffer(0, scene.wvb);
-      scenePass.setIndexBuffer(scene.wib, "uint16");
-      scenePass.drawIndexed(6);
+      if (layers.water) {
+        scenePass.setPipeline(waterP);
+        scenePass.setBindGroup(0, waterBG);
+        scenePass.setVertexBuffer(0, scene.wvb);
+        scenePass.setIndexBuffer(scene.wib, "uint16");
+        scenePass.drawIndexed(6);
+      }
     }
     // clouds (alpha over)
-    scenePass.setPipeline(cloudsP);
-    scenePass.setBindGroup(0, cloudsBG);
-    scenePass.draw(3);
+    if (layers.clouds) {
+      scenePass.setPipeline(cloudsP);
+      scenePass.setBindGroup(0, cloudsBG);
+      scenePass.draw(3);
+    }
     scenePass.end();
 
     // PASS 2: postfx -> swapchain
