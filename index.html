@@ -31,43 +31,160 @@
     }
     #tod { width: 160px; accent-color: #ffb27f; }
 
-    /* Destinations menu */
+    /* ============================================================
+       Destinations menu — cinematic "flight manifest" overlay
+       Atmospheric dusk sky + layered horizon SVG + boarding-pass rows.
+       Refined system-font stack (no network fonts).
+       ============================================================ */
     #menu {
+      --ui-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue",
+        "Hiragino Sans", "Hiragino Kaku Gothic ProN", Meiryo, system-ui, sans-serif;
       position: fixed; inset: 0; z-index: 10; overflow: auto;
+      background: #05080f;
+      font-family: var(--ui-sans);
+      transition: opacity .5s ease, visibility .5s ease;
+      -webkit-font-smoothing: antialiased;
+    }
+    #menu.hidden { opacity: 0; visibility: hidden; pointer-events: none; }
+
+    /* Dusk-to-altitude sky wash, sitting above the live canvas */
+    .menu-sky {
+      position: fixed; inset: 0; pointer-events: none;
       background:
-        radial-gradient(1200px 600px at 50% -10%, rgba(120,150,255,.10), transparent 60%),
-        radial-gradient(900px 500px at 80% 110%, rgba(255,150,90,.08), transparent 60%),
-        #05080f;
-      transition: opacity .35s ease;
+        radial-gradient(120% 80% at 50% 116%, rgba(255,178,127,.22), transparent 52%),
+        radial-gradient(90% 70% at 78% -16%, rgba(127,158,255,.16), transparent 60%),
+        linear-gradient(180deg, #060912 0%, #070b18 42%, #0a0f1f 100%);
     }
-    #menu.hidden { opacity: 0; pointer-events: none; }
-    .menu-inner { max-width: 1080px; margin: 0 auto; padding: 7vh 24px 6vh; }
-    .menu-head h1 { font-size: clamp(40px, 8vw, 84px); margin: 0; letter-spacing: .04em;
-      background: linear-gradient(120deg, #cfe0ff, #ffd9b0); -webkit-background-clip: text;
-      background-clip: text; color: transparent; }
-    .menu-sub { color: #8ea2c8; margin: 6px 0 36px; font-size: 14px; }
-    .menu-sub kbd { background: #1b2334; border: 1px solid #2c3a55; border-radius: 4px; padding: 0 5px; }
-    .cards { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 18px; }
-    .card {
-      position: relative; text-align: left; cursor: pointer; overflow: hidden;
-      background: rgba(14,20,33,.72); border: 1px solid rgba(120,150,210,.16);
-      border-radius: 16px; padding: 22px; color: inherit; font: inherit;
-      display: flex; flex-direction: column; gap: 6px; min-height: 160px;
-      transition: transform .2s ease, border-color .2s ease, box-shadow .25s ease;
+    /* Layered horizon ridgelines pinned to the bottom of the viewport */
+    .menu-horizon {
+      position: fixed; left: 0; right: 0; bottom: 0;
+      width: 100%; height: min(58vh, 540px);
+      pointer-events: none;
+      -webkit-mask-image: linear-gradient(180deg, transparent, #000 22%);
+              mask-image: linear-gradient(180deg, transparent, #000 22%);
     }
-    .card:hover, .card:focus-visible {
-      transform: translateY(-4px); outline: none;
-      border-color: var(--accent);
-      box-shadow: 0 12px 40px -12px var(--accent), 0 0 0 1px var(--accent) inset;
+    .menu-horizon-glow { animation: aloftGlow 9s ease-in-out infinite alternate; transform-origin: 50% 100%; }
+    .menu-flightpath { stroke-dashoffset: 0; animation: aloftDash 26s linear infinite; }
+    @keyframes aloftGlow { from { opacity: .85; } to { opacity: 1; } }
+    @keyframes aloftDash { to { stroke-dashoffset: -320; } }
+
+    .menu-inner {
+      position: relative; z-index: 1;
+      max-width: 940px; margin: 0 auto;
+      min-height: 100%; box-sizing: border-box;
+      padding: clamp(40px, 9vh, 96px) clamp(20px, 5vw, 40px) 64px;
+      display: flex; flex-direction: column;
     }
-    .card-glow { position: absolute; inset: -40% -40% auto auto; width: 70%; height: 70%;
-      background: radial-gradient(circle, var(--accent), transparent 70%); opacity: .18;
-      filter: blur(20px); pointer-events: none; }
-    .card-id { font-size: 11px; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); }
-    .card-name { font-size: 22px; font-weight: 700; color: #f0f5ff; }
-    .card-country { font-size: 12px; color: #7e92ba; }
-    .card-tag { font-size: 12.5px; color: #aab9d8; line-height: 1.5; margin-top: auto; }
-    .menu-foot { color: #6f83aa; font-size: 12px; min-height: 16px; margin-top: 28px; }
+
+    /* Masthead */
+    .menu-eyebrow {
+      margin: 0 0 14px; font-size: 11px; font-weight: 600;
+      letter-spacing: .42em; text-transform: uppercase;
+      color: #ffc89a;
+    }
+    .menu-title {
+      margin: 0; line-height: .92;
+      font-size: clamp(56px, 13vw, 132px); font-weight: 700;
+      letter-spacing: -.03em;
+      background: linear-gradient(176deg, #ffffff 8%, #d8e6ff 46%, #ffd9af 100%);
+      -webkit-background-clip: text; background-clip: text; color: transparent;
+      text-shadow: 0 30px 90px rgba(120,150,255,.18);
+    }
+    .menu-sub { margin: 16px 0 clamp(36px, 6vh, 60px); font-size: 15px; color: #9fb0d4; }
+    .menu-esc { color: #6f82a8; }
+    .menu-sub kbd {
+      font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 11px;
+      background: rgba(255,255,255,.06); border: 1px solid rgba(160,185,235,.28);
+      border-radius: 5px; padding: 1px 6px; color: #cdd9f0;
+    }
+
+    /* Flight manifest — boarding-pass rows */
+    .manifest { list-style: none; margin: 0; padding: 0;
+      border-top: 1px solid rgba(150,175,225,.13); }
+    .manifest-row { border-bottom: 1px solid rgba(150,175,225,.13); }
+
+    .dest {
+      position: relative; width: 100%; cursor: pointer;
+      display: grid; align-items: center; gap: clamp(14px, 3vw, 32px);
+      grid-template-columns: auto 1fr auto;
+      padding: clamp(18px, 2.6vh, 26px) clamp(8px, 2vw, 22px);
+      background: transparent; border: 0; color: inherit; text-align: left;
+      font-family: inherit;
+      transition: background .28s ease, padding-left .28s ease;
+      opacity: 0; transform: translateY(14px);
+      animation: aloftRow .6s cubic-bezier(.22,.61,.36,1) forwards;
+      animation-delay: var(--delay);
+    }
+    @keyframes aloftRow { to { opacity: 1; transform: none; } }
+    @media (prefers-reduced-motion: reduce) {
+      .dest { animation: none; opacity: 1; transform: none; }
+      .menu-horizon-glow, .menu-flightpath { animation: none; }
+      #menu { transition: opacity .2s ease; }
+    }
+
+    /* Accent edge-light that grows on hover/focus */
+    .dest-edge {
+      position: absolute; left: 0; top: 14%; bottom: 14%; width: 3px;
+      border-radius: 3px; background: var(--accent);
+      opacity: 0; transform: scaleY(.4); transform-origin: 50% 50%;
+      box-shadow: 0 0 18px var(--accent);
+      transition: opacity .28s ease, transform .28s ease;
+    }
+    .dest:hover, .dest:focus-visible {
+      outline: none;
+      padding-left: clamp(20px, 2.8vw, 34px);
+      background: linear-gradient(90deg,
+        color-mix(in srgb, var(--accent) 12%, transparent), transparent 70%);
+    }
+    .dest:hover .dest-edge, .dest:focus-visible .dest-edge { opacity: 1; transform: scaleY(1); }
+    .dest:focus-visible { box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--accent) 60%, transparent); border-radius: 10px; }
+
+    .dest-no {
+      font-variant-numeric: tabular-nums; font-weight: 600;
+      font-size: clamp(15px, 2vw, 19px); letter-spacing: .04em;
+      color: var(--accent); opacity: .82; min-width: 2ch;
+    }
+    .dest-body { min-width: 0; }
+    .dest-name {
+      display: block; font-weight: 650; color: #f3f7ff;
+      font-size: clamp(22px, 4.2vw, 34px); letter-spacing: -.01em; line-height: 1.08;
+    }
+    .dest-tag {
+      display: block; margin-top: 5px; color: #9eafd1;
+      font-size: clamp(12.5px, 1.6vw, 14.5px); line-height: 1.5;
+      max-width: 52ch;
+    }
+    .dest-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; text-align: right; }
+    .dest-country {
+      font-size: 11px; font-weight: 600; letter-spacing: .2em; text-transform: uppercase;
+      color: #8295ba; white-space: nowrap;
+    }
+    .dest-go {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; letter-spacing: .18em; text-transform: uppercase;
+      color: var(--accent); white-space: nowrap;
+      opacity: 0; transform: translateX(-6px);
+      transition: opacity .28s ease, transform .28s ease;
+    }
+    .dest-go svg { transition: transform .28s ease; }
+    .dest:hover .dest-go, .dest:focus-visible .dest-go { opacity: 1; transform: none; }
+    .dest:hover .dest-go svg, .dest:focus-visible .dest-go svg { transform: translateX(3px); }
+
+    .menu-foot {
+      margin-top: auto; padding-top: 26px;
+      color: #8a9cc0; font-size: 13px; min-height: 18px;
+      font-variant-numeric: tabular-nums;
+    }
+
+    /* Japanese (and other CJK) destination names get a touch more line spacing */
+    .dest[lang="ja"] .dest-name { letter-spacing: .01em; }
+
+    @media (max-width: 560px) {
+      .dest { grid-template-columns: auto 1fr; row-gap: 6px; }
+      .dest-meta { grid-column: 2; flex-direction: row; align-items: center; justify-content: flex-start; gap: 14px; }
+      .dest-go { opacity: 1; transform: none; }
+      .dest-tag { max-width: none; }
+    }
   </style>
 </head>
 <body>
