@@ -89,3 +89,27 @@ export function buildTerrainMesh(grid, opts = {}) {
 
   return { positions, normals, indices, vertexCount, indexCount, minH, maxH };
 }
+
+/**
+ * Bilinearly sample the terrain world-height at world (x, z) for a mesh built by
+ * buildTerrainMesh (centered on origin, the same `spacing`/`heightScale`).
+ * Returns -Infinity when (x, z) is outside the terrain footprint (so callers can
+ * treat off-terrain as "no ground").
+ * @param {HeightGrid} grid
+ */
+export function sampleHeight(grid, heightScale, x, z, spacing = 1) {
+  const { width: W, height: H, data } = grid;
+  const halfW = ((W - 1) * spacing) / 2;
+  const halfH = ((H - 1) * spacing) / 2;
+  const gx = (x + halfW) / spacing;
+  const gz = (z + halfH) / spacing;
+  if (gx < 0 || gz < 0 || gx > W - 1 || gz > H - 1) return -Infinity;
+  const x0 = Math.floor(gx), z0 = Math.floor(gz);
+  const x1 = Math.min(W - 1, x0 + 1), z1 = Math.min(H - 1, z0 + 1);
+  const fx = gx - x0, fz = gz - z0;
+  const h00 = data[z0 * W + x0], h10 = data[z0 * W + x1];
+  const h01 = data[z1 * W + x0], h11 = data[z1 * W + x1];
+  const top = h00 * (1 - fx) + h10 * fx;
+  const bot = h01 * (1 - fx) + h11 * fx;
+  return (top * (1 - fz) + bot * fz) * heightScale;
+}
