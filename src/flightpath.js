@@ -84,10 +84,14 @@ export function buildGlidePath(span, topY) {
  */
 export function railViewProj(points, u, aspect, lookCenterY) {
   const { pos, tangent } = sampleSpline(points, u);
+  // Frame the terrain center (the peak sits at the origin), keeping only a small
+  // forward lead for cinematic drift. Looking straight along the tangent kept the
+  // summit off to the side and out of frame.
+  const lead = 0.2;
   const target = [
-    pos[0] + tangent[0] * 50,
-    (lookCenterY ?? 0),                     // bias gaze toward terrain
-    pos[2] + tangent[2] * 50,
+    (pos[0] + tangent[0] * 60) * lead,
+    (lookCenterY ?? 0),
+    (pos[2] + tangent[2] * 60) * lead,
   ];
   const proj = perspective((58 * Math.PI) / 180, aspect, 0.5, 8000);
   const view = lookAt(pos, target, [0, 1, 0]);
@@ -102,13 +106,13 @@ export function railViewProj(points, u, aspect, lookCenterY) {
  * @param {number} dt seconds
  */
 export function stepFreeFlight(state, input, dt) {
-  const TURN = 0.9, PITCH_RATE = 0.7, ACCEL = 40, MIN_SPD = 30, MAX_SPD = 320;
+  const TURN = 1.0, PITCH_RATE = 0.8, ACCEL = 26, MIN_SPD = 16, MAX_SPD = 130;
   state.yaw += (input.yaw || 0) * TURN * dt;
   state.pitch += (input.pitch || 0) * PITCH_RATE * dt;
   state.pitch = Math.max(-1.2, Math.min(1.2, state.pitch));
   state.speed += (input.throttle || 0) * ACCEL * dt;
   // gravity-ish: diving (negative pitch) gains speed, climbing bleeds it
-  state.speed += -Math.sin(state.pitch) * 20 * dt;
+  state.speed += -Math.sin(state.pitch) * 14 * dt;
   state.speed = Math.max(MIN_SPD, Math.min(MAX_SPD, state.speed));
   const cp = Math.cos(state.pitch), sp = Math.sin(state.pitch);
   const dir = [
