@@ -4,7 +4,7 @@
 
 import { initWebGPU, WebGPUUnavailable } from "./gpu.js";
 import { loadHeightmap, loadMeta } from "./dem.js";
-import { buildTerrainMesh } from "./mesh.js";
+import { buildTerrainMesh, sampleHeight } from "./mesh.js";
 import { orbitViewProj, perspective, lookAt, multiply, invert } from "./camera.js";
 import { DESTINATIONS, destById, readHash, writeHash, createMenu } from "./destinations.js";
 import {
@@ -232,8 +232,9 @@ async function start() {
       loadMeta(`./assets/${id}.json`).catch(() => null),
     ]);
     const span = Math.max(grid.width, grid.height);
-    // vertical exaggeration: scale normalized 0..1 height into world units
-    const heightScale = span * 0.42;
+    // vertical exaggeration: scale normalized 0..1 height into world units.
+    // Kept gentle so broad cones (Fuji) read as cones, not needles.
+    const heightScale = span * 0.22;
     const mesh = buildTerrainMesh(grid, { spacing: 1.0, heightScale });
     const verts = interleave(mesh);
     const vbuf = device.createBuffer({ size: verts.byteLength, usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST });
@@ -303,12 +304,19 @@ async function start() {
 
   function updateHud() {
     if (mode !== "glide" || !scene) { setHud("aloft"); return; }
-    const src = scene.meta?.source === "aws-terrarium" ? "real DEM" : "procedural";
+    const d = destById(scene.id);
+    const ja = d?.lang === "ja";
+    const name = d?.name ?? scene.id;
+    const real = scene.meta?.source === "aws-terrarium";
+    const src = ja ? (real ? "実DEM" : "手続き生成") : (real ? "real DEM" : "procedural");
     const elev = scene.meta ? `${scene.meta.elevMin}–${scene.meta.elevMax} m` : "";
+    const L = ja
+      ? { mode: "モード", free: "自由滑空 (WASD/矢印)", rail: "オンレール・シネマ", toggle: "切替", menu: "メニュー", tod: "時間帯スライダー" }
+      : { mode: "mode", free: "FREE glide (WASD/arrows)", rail: "on-rails cinematic", toggle: "toggle", menu: "menu", tod: "time-of-day slider" };
     setHud(
-      `<b>${destById(scene.id)?.name ?? scene.id}</b> · ${src} ${elev}<br>` +
-      `mode: <b>${freeMode ? "FREE glide (WASD/arrows)" : "on-rails cinematic"}</b> · ` +
-      `<kbd>F</kbd> toggle · <kbd>Esc</kbd> menu · time-of-day slider ↗`
+      `<b>${name}</b> · ${src} ${elev}<br>` +
+      `${L.mode}: <b>${freeMode ? L.free : L.rail}</b> · ` +
+      `<kbd>F</kbd> ${L.toggle} · <kbd>Esc</kbd> ${L.menu} · ${L.tod} ↗`
     );
   }
 
@@ -321,7 +329,7 @@ async function start() {
       if (freeMode) {
         // seed free state from current rail position
         const a = railViewProj(scene.path, railU, 1, scene.mesh.maxH * 0.4);
-        freeState = { pos: [...a.eye], yaw: Math.atan2(a.target[2] - a.eye[2], a.target[0] - a.eye[0]), pitch: -0.1, speed: 90 };
+        freeState = { pos: [...a.eye], yaw: Math.atan2(a.target[2] - a.eye[2], a.target[0] - a.eye[0]), pitch: 0.0, speed: 48 };
       }
       updateHud();
       e.preventDefault();
@@ -371,9 +379,29 @@ async function start() {
       const lookY = scene.mesh.minH + (scene.mesh.maxH - scene.mesh.minH) * 0.35;
       if (freeMode && freeState) {
         stepFreeFlight(freeState, readInputs(dt), dt);
-        // soft floor so we don't sink through terrain base
-        const floorY = scene.mesh.minH + scene.span * 0.05;
-        if (freeState.pos[1] < floorY) { freeState.pos[1] = floorY; freeState.pitch = Math.max(freeState.pitch, 0.05); }
+        // terrain collision: sample the actual surface under the glider and repel
+        // upward when too close, so you skim over peaks instead of through them.
+        const groundY = sampleHeight(scene.grid, scene.heightScale, freeState.pos[0], freeState.pos[2]);
+        const minY = groundY + scene.heightScale * 0.05 + 6;
+        if (Number.isFinite(minY) && freeState.pos[1] < minY) {
+          freeState.pos[1] = minY;                           // don't penetrate
+          freeState.pitch = Math.max(freeState.pitch, 0.18); // bounce: nose up
+          freeState.speed *= 0.97;                           // shed a little speed
+        }
+        // soft boundary: keep the glider near the terrain so it can't drift away
+        // forever. Past the soft radius the heading is steered back inward; a hard
+        // clamp caps horizontal range and a ceiling caps altitude.
+        const hr = Math.hypot(freeState.pos[0], freeState.pos[2]) || 1;
+        const softR = scene.span * 0.6, maxR = scene.span * 0.95;
+        if (hr > softR) {
+          const inward = Math.atan2(-freeState.pos[2], -freeState.pos[0]);
+          let dy = inward - freeState.yaw;
+          dy = Math.atan2(Math.sin(dy), Math.cos(dy));
+          freeState.yaw += dy * Math.min(1, (hr - softR) / (maxR - softR)) * 2.2 * dt;
+        }
+        if (hr > maxR) { const k = maxR / hr; freeState.pos[0] *= k; freeState.pos[2] *= k; }
+        const ceiling = scene.mesh.maxH + scene.span * 0.7;
+        if (freeState.pos[1] > ceiling) { freeState.pos[1] = ceiling; freeState.pitch = Math.min(freeState.pitch, -0.04); }
         const r = freeViewProj(freeState, aspect);
         vp = r.vp; eye = r.eye; target = r.target; curSpeed = freeState.speed;
       } else {
@@ -389,7 +417,7 @@ async function start() {
 
     // speed feel 0..1 (free mode reaches higher)
     const tgt = mode === "glide"
-      ? (freeMode ? Math.min(1, (curSpeed - 30) / 290) : 0.22)
+      ? (freeMode ? Math.min(1, (curSpeed - 30) / 290) * 0.6 : 0.0)
       : 0.0;
     speed01 += (tgt - speed01) * Math.min(1, dt * 3);
 
