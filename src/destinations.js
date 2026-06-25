@@ -78,7 +78,8 @@ export function createMenu(onPick) {
     <div class="menu-inner">
       <header class="menu-head">
         <p class="menu-eyebrow">Cinematic glide tour · real terrain</p>
-        <h1 class="menu-title">AlOft</h1>
+        <h1 class="menu-title">A l O ft</h1>
+        <p class="menu-reading" aria-hidden="true">アロフト</p>
         <p class="menu-sub">Choose a destination and soar. <span class="menu-esc">Press <kbd>Esc</kbd> to return to the menu.</span></p>
       </header>
       <ol class="manifest" role="list" aria-label="Destinations"></ol>
