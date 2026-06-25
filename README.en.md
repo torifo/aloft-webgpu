@@ -14,6 +14,12 @@ A Soarin'-style flight piece that renders **real DEM (elevation data)** as 3D te
 glides majestically over the world's iconic places. Pick a destination from the **Destinations** menu
 and the glide begins. No backend; the runtime is network-free (terrain is bundled, lightweight).
 
+## Screenshots
+
+![Gliding over Mt. Fuji (real DEM terrain)](docs/screenshots/fuji-glide.jpg)
+
+![Destinations menu](docs/screenshots/menu.jpg)
+
 ## Destinations (5 places, all real DEM)
 Fetched at build time from AWS Terrain Tiles (terrarium), elevation-decoded, and downsampled to a ~512² heightmap, then bundled.
 

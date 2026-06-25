@@ -13,6 +13,12 @@
 **実 DEM（標高データ）**を WebGPU で 3D 地形に描き、世界の名所の上空を雄大に滑空する「ソアリン」的フライト作品。
 入口の **Destinations** から行き先を選ぶと滑空が始まる。バックエンドなし・ランタイムはネット非依存（地形は軽量同梱）。
 
+## スクリーンショット
+
+![富士山の上空を滑空（実 DEM 地形）](docs/screenshots/fuji-glide.jpg)
+
+![Destinations メニュー](docs/screenshots/menu.jpg)
+
 ## 収録（5 名所・すべて実 DEM）
 ビルド時に AWS Terrain Tiles（terrarium）から取得・標高デコードし、512² の軽量ハイトマップに変換して同梱。
 
